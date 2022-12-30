@@ -87,30 +87,34 @@ class KakaoMapView extends StatelessWidget {
   /// mapController.evaluateJavascript('map.setLevel(map.getLevel() + 1, {animate: true})');
   final void Function(WebViewController)? mapController;
 
-  KakaoMapView(
-      {required this.width,
-      required this.height,
-      required this.kakaoMapKey,
-      required this.lat,
-      required this.lng,
-      this.zoomLevel = 3,
-      this.overlayText,
-      this.customOverlayStyle,
-      this.customOverlay,
-      this.polygon,
-      this.polyline,
-      this.showZoomControl = false,
-      this.showMapTypeControl = false,
-      this.onTapMarker,
-      this.zoomChanged,
-      this.cameraIdle,
-      this.boundaryUpdate,
-      this.markerImageURL = '',
-      this.customScript,
-      this.mapWidgetKey,
-      this.draggableMarker = false,
-      this.mapType,
-      this.mapController});
+  final bool shouldOverrideGestures;
+
+  KakaoMapView({
+    required this.width,
+    required this.height,
+    required this.kakaoMapKey,
+    required this.lat,
+    required this.lng,
+    this.zoomLevel = 3,
+    this.overlayText,
+    this.customOverlayStyle,
+    this.customOverlay,
+    this.polygon,
+    this.polyline,
+    this.showZoomControl = false,
+    this.showMapTypeControl = false,
+    this.onTapMarker,
+    this.zoomChanged,
+    this.cameraIdle,
+    this.boundaryUpdate,
+    this.markerImageURL = '',
+    this.customScript,
+    this.mapWidgetKey,
+    this.draggableMarker = false,
+    this.mapType,
+    this.mapController,
+    this.shouldOverrideGestures = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -124,9 +128,11 @@ class KakaoMapView extends StatelessWidget {
         javascriptMode: JavascriptMode.unrestricted,
         javascriptChannels: _getChannels,
         debuggingEnabled: true,
-        gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>[
-          Factory(() => EagerGestureRecognizer()),
-        ].toSet(),
+        gestureRecognizers: shouldOverrideGestures
+            ? <Factory<OneSequenceGestureRecognizer>>[
+                Factory(() => EagerGestureRecognizer()),
+              ].toSet()
+            : null,
       ),
     );
   }
