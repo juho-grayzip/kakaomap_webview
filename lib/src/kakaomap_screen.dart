@@ -10,27 +10,28 @@ class KakaoMapScreen extends StatelessWidget {
   final GlobalKey<ScaffoldMessengerState> _scaffoldMessengerKey =
       GlobalKey<ScaffoldMessengerState>();
 
+  final WebViewController controller = WebViewController();
+
   @override
   Widget build(BuildContext context) {
+    controller
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..loadRequest(Uri.parse(url));
+    _addChannels();
     return ScaffoldMessenger(
       key: _scaffoldMessengerKey,
       child: Scaffold(
           body: SafeArea(
-        child: WebView(
-          initialUrl: url,
-          javascriptMode: JavascriptMode.unrestricted,
-          javascriptChannels: <JavascriptChannel>{_toasterJavascriptChannel()},
-        ),
+        child: WebViewWidget(controller: controller),
       )),
     );
   }
 
-  JavascriptChannel _toasterJavascriptChannel() {
-    return JavascriptChannel(
-        name: 'Toaster',
-        onMessageReceived: (JavascriptMessage message) {
-          _scaffoldMessengerKey.currentState
-              ?.showSnackBar(SnackBar(content: Text(message.message)));
-        });
+  void _addChannels() {
+    controller.addJavaScriptChannel('Toaster',
+        onMessageReceived: (JavaScriptMessage message) {
+      _scaffoldMessengerKey.currentState
+          ?.showSnackBar(SnackBar(content: Text(message.message)));
+    });
   }
 }

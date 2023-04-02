@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:kakaomap_webview/src/kakao_figure.dart';
 import 'package:kakaomap_webview/src/kakaomap_type.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+// import 'package:webview_flutter/webview_flutter.dart';
 
 class KakaoMapView extends StatelessWidget {
   /// Map width. If width is wider than screen size, the map center can be changed
@@ -53,16 +54,16 @@ class KakaoMapView extends StatelessWidget {
   final String? customOverlay;
 
   /// Marker tap event
-  final void Function(JavascriptMessage)? onTapMarker;
+  final void Function(JavaScriptMessage)? onTapMarker;
 
   /// Zoom change event
-  final void Function(JavascriptMessage)? zoomChanged;
+  final void Function(JavaScriptMessage)? zoomChanged;
 
   /// When user stop moving camera, this event will occur
-  final void Function(JavascriptMessage)? cameraIdle;
+  final void Function(JavaScriptMessage)? cameraIdle;
 
   /// North East, South West lat, lang will be updated when the move event is occurred
-  final void Function(JavascriptMessage)? boundaryUpdate;
+  final void Function(JavaScriptMessage)? boundaryUpdate;
 
   /// [KakaoFigure] is required [KakaoFigure.path] to make polygon.
   /// If null, it won't be enabled
@@ -116,54 +117,61 @@ class KakaoMapView extends StatelessWidget {
     this.shouldOverrideGestures = false,
   });
 
+  final WebViewController controller = WebViewController();
+
   @override
   Widget build(BuildContext context) {
+    controller
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..loadRequest(
+        Uri.parse((customScript == null) ? _getHTML() : _customScriptHTML()),
+      );
+    _addChannels();
     return SizedBox(
       key: mapWidgetKey,
       height: height,
       width: width,
-      child: WebView(
-        initialUrl: (customScript == null) ? _getHTML() : _customScriptHTML(),
-        onWebViewCreated: mapController,
-        javascriptMode: JavascriptMode.unrestricted,
-        javascriptChannels: _getChannels,
-        debuggingEnabled: true,
+      child: WebViewWidget(
+        controller: controller,
+        // onWebViewCreated: mapController,
+        // debuggingEnabled: true,
         gestureRecognizers: shouldOverrideGestures
             ? <Factory<OneSequenceGestureRecognizer>>[
                 Factory(() => EagerGestureRecognizer()),
               ].toSet()
-            : null,
+            : {},
       ),
     );
   }
 
-  Set<JavascriptChannel>? get _getChannels {
-    Set<JavascriptChannel>? channels = {};
+  void _addChannels() {
     if (onTapMarker != null) {
-      channels.add(JavascriptChannel(
-          name: 'onTapMarker', onMessageReceived: onTapMarker!));
+      controller.addJavaScriptChannel(
+        'onTapMarker',
+        onMessageReceived: onTapMarker!,
+      );
     }
 
     if (zoomChanged != null) {
-      channels.add(JavascriptChannel(
-          name: 'zoomChanged', onMessageReceived: zoomChanged!));
+      controller.addJavaScriptChannel(
+        'zoomChanged',
+        onMessageReceived: zoomChanged!,
+      );
     }
 
     if (cameraIdle != null) {
-      channels.add(JavascriptChannel(
-          name: 'cameraIdle', onMessageReceived: cameraIdle!));
+      controller.addJavaScriptChannel(
+        'cameraIdle',
+        onMessageReceived: cameraIdle!,
+      );
     }
 
     if (boundaryUpdate != null) {
-      channels.add(JavascriptChannel(
-          name: 'boundaryUpdate', onMessageReceived: boundaryUpdate!));
+      controller.addJavaScriptChannel(
+        'boundaryUpdate',
+        onMessageReceived: boundaryUpdate!,
+      );
     }
-
-    if (channels.isEmpty) {
-      return null;
-    }
-
-    return channels;
   }
 
   String _getHTML() {
